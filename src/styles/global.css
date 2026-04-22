@@ -1,0 +1,48 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #000;
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --neon: #00ff00;
+  --neon-dim: rgba(0, 255, 0, 0.15);
+  --neon-border: rgba(0, 255, 0, 0.2);
+  --neon-border-hover: rgba(0, 255, 0, 0.4);
+  --neon-glow: 0 0 20px rgba(0, 255, 0, 0.3);
+  --neon-glow-lg: 0 0 40px rgba(0, 255, 0, 0.2);
+  --panel: #000000;
+  --surface: rgba(0, 0, 0, 0.6);
+  --card: #0a0a0a;
+  --border: #1f1f1f;
+  --muted: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --white: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 0, 0.3);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 0, 0.5);
+}

@@ -1,0 +1,56 @@
+/* Layout Wrapper */
+.layout {
+  min-height: 100vh;
+  background: #000;
+  position: relative;
+}
+
+/* Neon Grid Background */
+.layout::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.layout::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 255, 0, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main-wrapper {
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.main-wrapper.expanded {
+  margin-left: 80px;
+}
+
+.main-content {
+  padding: 90px 2rem 2rem;
+  min-height: 100vh;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .main-wrapper,
+  .main-wrapper.expanded {
+    margin-left: 0 !important;
+  }
+  
+  .main-content {
+    padding: 80px 1rem 1rem;
+  }
+}
