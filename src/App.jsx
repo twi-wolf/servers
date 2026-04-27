@@ -5,6 +5,8 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Servers from './pages/Servers'
 import ServerDetail from './pages/ServerDetail'
+import Wallet from './pages/Wallet'
+import Referrals from './pages/Referrals'
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/servers" element={<Servers />} />
         <Route path="/servers/:id" element={<ServerDetail />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/referrals" element={<Referrals />} />
         
         {/* 404 Catch-all */}
         <Route path="*" element={
