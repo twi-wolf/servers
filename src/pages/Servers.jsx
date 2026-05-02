@@ -62,14 +62,16 @@ export default function Servers() {
   return (
     <Layout pageTitle="Servers">
       <div className="servers-page">
-        {/* Header */}
-        <div className="servers-header">
-          <div className="header-actions">
-            <Link to="/servers/create" className="create-server-btn">
-              <Plus size={16} />
-              New Server
-            </Link>
+        {/* Page Title */}
+        <div className="servers-page-title">
+          <div className="servers-title-left">
+            <h1>SERVER<span>-WOLF</span></h1>
+            <span className="servers-title-sub">Manage your WhatsApp bot instances</span>
           </div>
+          <Link to="/servers/create" className="create-server-btn">
+            <Plus size={16} />
+            New Server
+          </Link>
         </div>
 
         {/* Stats */}
