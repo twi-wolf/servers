@@ -7,12 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+server/node_modules
+
+# Build output (Heroku builds this via heroku-postbuild — do not commit dist)
 dist
 dist-ssr
-*.local
 
-# Editor directories and files
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,3 +30,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Replit-specific
+.local
+.cache
+.upm
+replit.nix
+.replit
