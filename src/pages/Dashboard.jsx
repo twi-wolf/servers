@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import '../styles/Dashboard.css'
-import { 
-  Server, 
-  CreditCard, 
-  Users, 
+import { useAuth } from '../context/AuthContext'
+import {
+  Server,
+  Users,
   Activity,
   Plus,
   Play,
@@ -13,77 +13,75 @@ import {
   RefreshCw,
   Terminal,
   FolderOpen,
-  MoreVertical,
   TrendingUp,
   TrendingDown,
-  Copy,
-  Check
+  MessageCircle,
+  Zap,
+  Code2
 } from 'lucide-react'
 
 export default function Dashboard() {
-  const [copied, setCopied] = useState(false)
-  const referralCode = 'WOLF-REF-2026'
+  const { user } = useAuth()
 
-  // Mock data - will be replaced with API calls later
   const stats = [
-    { 
-      label: 'Active Servers', 
-      value: '3', 
-      icon: Server, 
-      change: '+1', 
+    {
+      label: 'Active Bots',
+      value: '3',
+      icon: MessageCircle,
+      change: '+1',
       trend: 'up',
       color: '#00ff00'
     },
-    { 
-      label: 'Account Balance', 
-      value: '$45.50', 
-      icon: CreditCard, 
-      change: '+$10', 
+    {
+      label: 'Total Users',
+      value: '5',
+      icon: Users,
+      change: '+2',
+      trend: 'up',
+      color: '#3b82f6'
+    },
+    {
+      label: 'API Requests Today',
+      value: '1,482',
+      icon: Zap,
+      change: '+18%',
       trend: 'up',
       color: '#00ff00'
     },
-    { 
-      label: 'Total Referrals', 
-      value: '12', 
-      icon: Users, 
-      change: '+3', 
-      trend: 'up',
-      color: '#00ff00'
-    },
-    { 
-      label: 'Monthly Usage', 
-      value: '67%', 
-      icon: Activity, 
-      change: '-5%', 
+    {
+      label: 'CPU Usage',
+      value: '24%',
+      icon: Activity,
+      change: '-5%',
       trend: 'down',
       color: '#f59e0b'
     },
   ]
 
   const servers = [
-    { 
-      id: 1, 
-      name: 'Discord Bot - Music', 
-      status: 'online', 
-      cpu: '12%', 
+    {
+      id: 1,
+      name: 'WA Sales Bot',
+      status: 'online',
+      cpu: '12%',
       ram: '256MB / 1GB',
       uptime: '3 days',
       node: 'Node-01'
     },
-    { 
-      id: 2, 
-      name: 'Discord Bot - Moderation', 
-      status: 'online', 
-      cpu: '8%', 
+    {
+      id: 2,
+      name: 'WA Support Bot',
+      status: 'online',
+      cpu: '8%',
       ram: '180MB / 512MB',
       uptime: '7 days',
       node: 'Node-02'
     },
-    { 
-      id: 3, 
-      name: 'Telegram Bot', 
-      status: 'offline', 
-      cpu: '0%', 
+    {
+      id: 3,
+      name: 'WA Broadcast Bot',
+      status: 'offline',
+      cpu: '0%',
       ram: '0MB / 1GB',
       uptime: 'Stopped',
       node: 'Node-01'
@@ -91,17 +89,11 @@ export default function Dashboard() {
   ]
 
   const recentActivity = [
-    { id: 1, action: 'Server started', server: 'Discord Bot - Music', time: '5 minutes ago' },
-    { id: 2, action: 'File uploaded', server: 'Discord Bot - Moderation', time: '2 hours ago' },
-    { id: 3, action: 'Backup created', server: 'Discord Bot - Music', time: '1 day ago' },
-    { id: 4, action: 'Payment received', server: 'Account', time: '2 days ago' },
+    { id: 1, action: 'Bot started', server: 'WA Sales Bot', time: '5 minutes ago' },
+    { id: 2, action: 'File uploaded', server: 'WA Support Bot', time: '2 hours ago' },
+    { id: 3, action: 'API key created', server: 'Application API', time: '5 hours ago' },
+    { id: 4, action: 'New user registered', server: 'Users', time: '1 day ago' },
   ]
-
-  const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   return (
     <Layout pageTitle="Dashboard">
@@ -109,12 +101,12 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-text">
-            <h2>Welcome back, <span>Username</span></h2>
-            <p>Here's what's happening with your servers today.</p>
+            <h2>Welcome back, <span>{user?.username || 'User'}</span></h2>
+            <p>Here's what's happening with your WhatsApp bots today.</p>
           </div>
-          <Link to="/servers/create" className="create-server-btn">
+          <Link to="/servers" className="create-server-btn">
             <Plus size={18} />
-            Create Server
+            New Bot Server
           </Link>
         </div>
 
@@ -145,7 +137,7 @@ export default function Dashboard() {
           {/* Left Column - Servers */}
           <div className="dashboard-card servers-card">
             <div className="card-header">
-              <h3>Your Servers</h3>
+              <h3>Your Bot Servers</h3>
               <Link to="/servers" className="view-all">View All →</Link>
             </div>
             <div className="servers-list">
@@ -166,33 +158,18 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="server-uptime">
-                    {server.uptime}
-                  </div>
+                  <div className="server-uptime">{server.uptime}</div>
                   <div className="server-actions">
                     {server.status === 'online' ? (
                       <>
-                        <button className="server-action-btn" title="Restart">
-                          <RefreshCw size={16} />
-                        </button>
-                        <button className="server-action-btn" title="Stop">
-                          <Square size={16} />
-                        </button>
+                        <button className="server-action-btn" title="Restart"><RefreshCw size={16} /></button>
+                        <button className="server-action-btn" title="Stop"><Square size={16} /></button>
                       </>
                     ) : (
-                      <button className="server-action-btn" title="Start">
-                        <Play size={16} />
-                      </button>
+                      <button className="server-action-btn" title="Start"><Play size={16} /></button>
                     )}
-                    <button className="server-action-btn" title="Terminal">
-                      <Terminal size={16} />
-                    </button>
-                    <button className="server-action-btn" title="File Manager">
-                      <FolderOpen size={16} />
-                    </button>
-                    <button className="server-action-btn" title="More">
-                      <MoreVertical size={16} />
-                    </button>
+                    <button className="server-action-btn" title="Terminal"><Terminal size={16} /></button>
+                    <button className="server-action-btn" title="File Manager"><FolderOpen size={16} /></button>
                   </div>
                 </div>
               ))}
@@ -201,38 +178,27 @@ export default function Dashboard() {
 
           {/* Right Column */}
           <div className="dashboard-right">
-            {/* Referral Card */}
-            <div className="dashboard-card referral-card">
+            {/* Quick Links Card */}
+            <div className="dashboard-card quick-actions-card">
               <div className="card-header">
-                <h3>Referral Program</h3>
-                <Users size={20} className="card-icon" />
+                <h3>Quick Actions</h3>
               </div>
-              <div className="referral-content">
-                <p className="referral-desc">
-                  Invite friends and earn <span>10% commission</span> on their payments!
-                </p>
-                <div className="referral-code-box">
-                  <code>{referralCode}</code>
-                  <button 
-                    className="copy-btn"
-                    onClick={copyReferralCode}
-                    title="Copy referral code"
-                  >
-                    {copied ? <Check size={18} /> : <Copy size={18} />}
-                  </button>
-                </div>
-                <div className="referral-stats">
-                  <div className="ref-stat">
-                    <span className="ref-label">Total Referrals</span>
-                    <span className="ref-value">12</span>
-                  </div>
-                  <div className="ref-stat">
-                    <span className="ref-label">Earnings</span>
-                    <span className="ref-value">$23.50</span>
-                  </div>
-                </div>
-                <Link to="/referrals" className="referral-link">
-                  View Referral Dashboard →
+              <div className="quick-actions-grid">
+                <Link to="/servers" className="quick-action">
+                  <Server size={20} />
+                  <span>Bot Servers</span>
+                </Link>
+                <Link to="/users" className="quick-action">
+                  <Users size={20} />
+                  <span>Manage Users</span>
+                </Link>
+                <Link to="/api" className="quick-action">
+                  <Code2 size={20} />
+                  <span>API Keys</span>
+                </Link>
+                <Link to="/settings" className="quick-action">
+                  <Terminal size={20} />
+                  <span>Settings</span>
                 </Link>
               </div>
             </div>
@@ -255,31 +221,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Quick Actions Card */}
-            <div className="dashboard-card quick-actions-card">
-              <div className="card-header">
-                <h3>Quick Actions</h3>
-              </div>
-              <div className="quick-actions-grid">
-                <Link to="/servers/create" className="quick-action">
-                  <Plus size={20} />
-                  <span>New Server</span>
-                </Link>
-                <Link to="/billing/add-funds" className="quick-action">
-                  <CreditCard size={20} />
-                  <span>Add Funds</span>
-                </Link>
-                <Link to="/docs" className="quick-action">
-                  <FolderOpen size={20} />
-                  <span>Documentation</span>
-                </Link>
-                <Link to="/support" className="quick-action">
-                  <Terminal size={20} />
-                  <span>Support</span>
-                </Link>
               </div>
             </div>
           </div>

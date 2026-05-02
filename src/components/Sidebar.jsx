@@ -1,28 +1,35 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import '../styles/Sidebar.css'
-import { 
-  LayoutDashboard, 
-  Server, 
-  CreditCard, 
-  Wallet,
-  Users, 
+import { useAuth } from '../context/AuthContext'
+import {
+  LayoutDashboard,
+  Server,
+  Users,
+  Code2,
   Settings,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react'
 
 export default function Sidebar({ collapsed, setCollapsed }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/servers', label: 'Servers', icon: Server },
-    { path: '/billing', label: 'Billing', icon: CreditCard },
-    { path: '/wallet', label: 'Wallet', icon: Wallet },
-    { path: '/referrals', label: 'Referrals', icon: Users },
+    { path: '/users', label: 'Users', icon: Users },
+    { path: '/api', label: 'Application API', icon: Code2 },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -46,7 +53,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-          
+
           return (
             <Link
               key={item.path}
@@ -62,7 +69,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       </nav>
 
       {/* Collapse Toggle */}
-      <button 
+      <button
         className="sidebar-toggle"
         onClick={() => setCollapsed(!collapsed)}
       >
@@ -73,16 +80,19 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       {/* User Profile (Bottom) */}
       <div className="sidebar-user">
         <div className="user-avatar">
-          <span>U</span>
+          {user?.role === 'admin'
+            ? <Shield size={16} style={{ color: '#3b82f6' }} />
+            : <span>{user?.username?.[0]?.toUpperCase() || 'U'}</span>
+          }
         </div>
         {!collapsed && (
           <div className="user-info">
-            <p className="user-name">Username</p>
-            <p className="user-email">user@email.com</p>
+            <p className="user-name">{user?.username || 'User'}</p>
+            <p className="user-email">{user?.email || ''}</p>
           </div>
         )}
         {!collapsed && (
-          <button className="logout-btn" title="Logout">
+          <button className="logout-btn" title="Logout" onClick={handleLogout}>
             <LogOut size={18} />
           </button>
         )}
