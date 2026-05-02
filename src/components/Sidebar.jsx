@@ -2,18 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import '../styles/Sidebar.css'
 import { useAuth } from '../context/AuthContext'
 import {
-  LayoutDashboard,
-  Server,
-  Users,
-  Code2,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Shield
+  LayoutDashboard, Server, Users, Code2, Settings,
+  ChevronLeft, ChevronRight, LogOut, Shield, X
 } from 'lucide-react'
 
-export default function Sidebar({ collapsed, setCollapsed }) {
+export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -26,14 +19,16 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
+  const handleNavClick = () => setMobileOpen(false)
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Logo Section */}
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      {/* Mobile close button */}
+      <button className="sidebar-mobile-close" onClick={() => setMobileOpen(false)}>
+        <X size={18} />
+      </button>
+
       <div className="sidebar-logo">
         <div className="logo-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#00ff00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,18 +43,17 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         )}
       </div>
 
-      {/* Navigation Links */}
       <nav className="sidebar-nav">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-
           return (
             <Link
               key={item.path}
               to={item.path}
               className={`sidebar-link ${isActive ? 'active' : ''}`}
               title={collapsed ? item.label : ''}
+              onClick={handleNavClick}
             >
               <Icon size={20} />
               {!collapsed && <span>{item.label}</span>}
@@ -68,16 +62,12 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         })}
       </nav>
 
-      {/* Collapse Toggle */}
-      <button
-        className="sidebar-toggle"
-        onClick={() => setCollapsed(!collapsed)}
-      >
+      {/* Collapse toggle (desktop only) */}
+      <button className="sidebar-toggle desktop-only" onClick={() => setCollapsed(!collapsed)}>
         {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         {!collapsed && <span>Collapse</span>}
       </button>
 
-      {/* User Profile (Bottom) */}
       <div className="sidebar-user">
         <div className="user-avatar">
           {user?.role === 'admin'

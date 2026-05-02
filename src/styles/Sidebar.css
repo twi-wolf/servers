@@ -245,18 +245,40 @@
   }
 }
 
+/* Mobile close button */
+.sidebar-mobile-close {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #9ca3af;
+  padding: 0.35rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.sidebar-mobile-close:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); }
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .sidebar {
+    position: fixed;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.28s ease;
+    z-index: 200;
+    width: 260px !important;
+    box-shadow: 4px 0 30px rgba(0,0,0,0.6);
   }
   
   .sidebar.mobile-open {
     transform: translateX(0);
   }
-  
-  .sidebar.collapsed {
-    width: 260px;
-  }
+
+  .sidebar-mobile-close { display: flex; }
+  .sidebar-toggle.desktop-only { display: none; }
 }

@@ -1,504 +1,84 @@
-// import { useState } from 'react'
-// import { Link } from 'react-router-dom'
-// import Layout from '../components/Layout'
-// import '../styles/Servers.css'
-// import { 
-//   Plus,
-//   Search,
-//   Filter,
-//   Play,
-//   Square,
-//   RefreshCw,
-//   Terminal,
-//   FolderOpen,
-//   MoreVertical,
-//   Server,
-//   Cpu,
-//   MemoryStick,
-//   HardDrive,
-//   Globe,
-//   Copy,
-//   Trash2,
-//   Settings
-// } from 'lucide-react'
-
-// export default function Servers() {
-//   const [searchTerm, setSearchTerm] = useState('')
-//   const [filterStatus, setFilterStatus] = useState('all')
-//   // Removed unused selectedServer state - will add back when implementing server actions modal
-
-//   // Mock data - will be replaced with API calls
-//   const servers = [
-//     { 
-//       id: 1, 
-//       name: 'Discord Music Bot', 
-//       status: 'online', 
-//       cpu: '12%', 
-//       ram: '256MB / 1GB',
-//       disk: '2.3GB / 10GB',
-//       uptime: '3 days',
-//       node: 'Node-01 (US East)',
-//       ip: '192.168.1.101',
-//       port: '25565',
-//       type: 'Discord Bot',
-//       version: 'Node.js 20',
-//       lastBackup: '2 hours ago'
-//     },
-//     { 
-//       id: 2, 
-//       name: 'Moderation Bot', 
-//       status: 'online', 
-//       cpu: '8%', 
-//       ram: '180MB / 512MB',
-//       disk: '1.1GB / 5GB',
-//       uptime: '7 days',
-//       node: 'Node-02 (EU West)',
-//       ip: '192.168.1.102',
-//       port: '25566',
-//       type: 'Discord Bot',
-//       version: 'Python 3.11',
-//       lastBackup: '1 day ago'
-//     },
-//     { 
-//       id: 3, 
-//       name: 'Telegram Bot', 
-//       status: 'offline', 
-//       cpu: '0%', 
-//       ram: '0MB / 1GB',
-//       disk: '0.8GB / 5GB',
-//       uptime: 'Stopped',
-//       node: 'Node-01 (US East)',
-//       ip: '192.168.1.103',
-//       port: '25567',
-//       type: 'Telegram Bot',
-//       version: 'Python 3.11',
-//       lastBackup: '3 days ago'
-//     },
-//     { 
-//       id: 4, 
-//       name: 'Minecraft Bot', 
-//       status: 'online', 
-//       cpu: '5%', 
-//       ram: '120MB / 512MB',
-//       disk: '0.5GB / 5GB',
-//       uptime: '12 hours',
-//       node: 'Node-03 (Asia)',
-//       ip: '192.168.1.104',
-//       port: '25568',
-//       type: 'Minecraft Bot',
-//       version: 'Node.js 18',
-//       lastBackup: '6 hours ago'
-//     },
-//   ]
-
-//   const filteredServers = servers.filter(server => {
-//     const matchesSearch = server.name.toLowerCase().includes(searchTerm.toLowerCase())
-//     const matchesFilter = filterStatus === 'all' || server.status === filterStatus
-//     return matchesSearch && matchesFilter
-//   })
-
-//   const stats = {
-//     total: servers.length,
-//     online: servers.filter(s => s.status === 'online').length,
-//     offline: servers.filter(s => s.status === 'offline').length,
-//     totalRam: '3.5GB / 8GB',
-//     totalCpu: '25%'
-//   }
-
-//   // Copy IP to clipboard
-//   const copyToClipboard = (text) => {
-//     navigator.clipboard.writeText(text)
-//     // You could add a toast notification here later
-//   }
-
-//   return (
-//     <Layout pageTitle="Servers">
-//       <div className="servers-page">
-//         {/* Header Actions */}
-//         <div className="servers-header">
-//           <div className="header-actions">
-//             <Link to="/servers/create" className="create-server-btn">
-//               <Plus size={18} />
-//               Create New Server
-//             </Link>
-//           </div>
-//         </div>
-
-//         {/* Stats Overview */}
-//         <div className="servers-stats">
-//           <div className="stat-item">
-//             <Server size={20} />
-//             <div className="stat-info">
-//               <span className="stat-value">{stats.total}</span>
-//               <span className="stat-label">Total Servers</span>
-//             </div>
-//           </div>
-//           <div className="stat-item online">
-//             <div className="status-dot"></div>
-//             <div className="stat-info">
-//               <span className="stat-value">{stats.online}</span>
-//               <span className="stat-label">Online</span>
-//             </div>
-//           </div>
-//           <div className="stat-item offline">
-//             <div className="status-dot"></div>
-//             <div className="stat-info">
-//               <span className="stat-value">{stats.offline}</span>
-//               <span className="stat-label">Offline</span>
-//             </div>
-//           </div>
-//           <div className="stat-item">
-//             <Cpu size={20} />
-//             <div className="stat-info">
-//               <span className="stat-value">{stats.totalCpu}</span>
-//               <span className="stat-label">Total CPU</span>
-//             </div>
-//           </div>
-//           <div className="stat-item">
-//             <MemoryStick size={20} />
-//             <div className="stat-info">
-//               <span className="stat-value">{stats.totalRam}</span>
-//               <span className="stat-label">Total RAM</span>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Search and Filter Bar */}
-//         <div className="servers-toolbar">
-//           <div className="search-wrapper">
-//             <Search size={18} />
-//             <input 
-//               type="text" 
-//               placeholder="Search servers..."
-//               value={searchTerm}
-//               onChange={(e) => setSearchTerm(e.target.value)}
-//             />
-//           </div>
-//           <div className="filter-wrapper">
-//             <Filter size={18} />
-//             <select 
-//               value={filterStatus}
-//               onChange={(e) => setFilterStatus(e.target.value)}
-//             >
-//               <option value="all">All Servers</option>
-//               <option value="online">Online</option>
-//               <option value="offline">Offline</option>
-//             </select>
-//           </div>
-//         </div>
-
-//         {/* Servers Grid */}
-//         <div className="servers-grid">
-//           {filteredServers.map((server) => (
-//             <div key={server.id} className="server-card">
-//               {/* Card Header */}
-//               <div className="server-card-header">
-//                 <div className="server-title">
-//                   <div className={`server-status-badge ${server.status}`}>
-//                     <span className="status-dot"></span>
-//                     {server.status}
-//                   </div>
-//                   <h3>{server.name}</h3>
-//                 </div>
-//                 <button className="more-options-btn">
-//                   <MoreVertical size={18} />
-//                 </button>
-//               </div>
-
-//               {/* Server Type & Version */}
-//               <div className="server-type">
-//                 <span className="type-badge">{server.type}</span>
-//                 <span className="version-badge">{server.version}</span>
-//               </div>
-
-//               {/* Resource Usage */}
-//               <div className="server-resources">
-//                 <div className="resource-item">
-//                   <Cpu size={14} />
-//                   <div className="resource-bar">
-//                     <div 
-//                       className="resource-fill cpu" 
-//                       style={{ width: server.cpu }}
-//                     ></div>
-//                   </div>
-//                   <span>{server.cpu}</span>
-//                 </div>
-//                 <div className="resource-item">
-//                   <MemoryStick size={14} />
-//                   <div className="resource-bar">
-//                     <div 
-//                       className="resource-fill ram" 
-//                       style={{ 
-//                         width: server.ram.includes('/') ? 
-//                           (parseInt(server.ram.split('/')[0].replace('MB', '')) / 
-//                            parseInt(server.ram.split('/')[1].replace('MB', '').replace('GB', '')) * 100) + '%' 
-//                           : '0%' 
-//                       }}
-//                     ></div>
-//                   </div>
-//                   <span>{server.ram}</span>
-//                 </div>
-//                 <div className="resource-item">
-//                   <HardDrive size={14} />
-//                   <div className="resource-bar">
-//                     <div 
-//                       className="resource-fill disk" 
-//                       style={{ width: '23%' }}
-//                     ></div>
-//                   </div>
-//                   <span>{server.disk}</span>
-//                 </div>
-//               </div>
-
-//               {/* Server Details */}
-//               <div className="server-details-compact">
-//                 <div className="detail-row">
-//                   <Globe size={14} />
-//                   <span>{server.node}</span>
-//                 </div>
-//                 <div className="detail-row">
-//                   <Server size={14} />
-//                   <span>{server.ip}:{server.port}</span>
-//                   <button 
-//                     className="copy-ip-btn" 
-//                     title="Copy IP"
-//                     onClick={() => copyToClipboard(`${server.ip}:${server.port}`)}
-//                   >
-//                     <Copy size={12} />
-//                   </button>
-//                 </div>
-//                 <div className="detail-row">
-//                   <RefreshCw size={14} />
-//                   <span>Uptime: {server.uptime}</span>
-//                 </div>
-//               </div>
-
-//               {/* Card Actions */}
-//               <div className="server-card-actions">
-//                 {server.status === 'online' ? (
-//                   <>
-//                     <button className="card-action-btn" title="Restart">
-//                       <RefreshCw size={16} />
-//                       <span>Restart</span>
-//                     </button>
-//                     <button className="card-action-btn danger" title="Stop">
-//                       <Square size={16} />
-//                       <span>Stop</span>
-//                     </button>
-//                   </>
-//                 ) : (
-//                   <button className="card-action-btn success" title="Start">
-//                     <Play size={16} />
-//                     <span>Start</span>
-//                   </button>
-//                 )}
-//                 <Link to={`/servers/${server.id}/terminal`} className="card-action-btn">
-//                   <Terminal size={16} />
-//                   <span>Terminal</span>
-//                 </Link>
-//                 <Link to={`/servers/${server.id}/files`} className="card-action-btn">
-//                   <FolderOpen size={16} />
-//                   <span>Files</span>
-//                 </Link>
-//               </div>
-
-//               {/* Additional Actions */}
-//               <div className="server-card-footer">
-//                 <button className="footer-action" title="Settings">
-//                   <Settings size={14} />
-//                 </button>
-//                 <button className="footer-action danger" title="Delete">
-//                   <Trash2 size={14} />
-//                 </button>
-//                 <span className="backup-info">
-//                   Last backup: {server.lastBackup}
-//                 </span>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-
-//         {/* Empty State */}
-//         {filteredServers.length === 0 && (
-//           <div className="empty-state">
-//             <Server size={48} />
-//             <h3>No servers found</h3>
-//             <p>Create your first server to get started!</p>
-//             <Link to="/servers/create" className="create-server-btn">
-//               <Plus size={18} />
-//               Create Server
-//             </Link>
-//           </div>
-//         )}
-//       </div>
-//     </Layout>
-//   )
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import '../styles/Servers.css'
-import { 
-  Plus,
-  Search,
-  Filter,
-  Play,
-  Square,
-  RefreshCw,
-  MoreVertical,
-  Server,
-  Cpu,
-  MemoryStick,
-  HardDrive,
-  Globe,
-  Copy,
-  Trash2,
-  Settings,
-  ExternalLink
+import {
+  Plus, Search, Filter, Play, Square, RefreshCw,
+  Server, Cpu, MemoryStick, HardDrive, Globe,
+  Copy, Trash2, Settings, ExternalLink, Loader
 } from 'lucide-react'
 
 export default function Servers() {
+  const [servers, setServers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [actionLoading, setActionLoading] = useState({})
 
-  // Mock data - will be replaced with API calls
-  const servers = [
-    { 
-      id: 1, 
-      name: 'Discord Music Bot', 
-      status: 'online', 
-      cpu: '12%', 
-      ram: '256MB / 1GB',
-      disk: '2.3GB / 10GB',
-      uptime: '3 days',
-      node: 'Node-01 (US East)',
-      ip: '192.168.1.101',
-      port: '25565',
-      type: 'Discord Bot',
-      version: 'Node.js 20',
-      lastBackup: '2 hours ago'
-    },
-    { 
-      id: 2, 
-      name: 'Moderation Bot', 
-      status: 'online', 
-      cpu: '8%', 
-      ram: '180MB / 512MB',
-      disk: '1.1GB / 5GB',
-      uptime: '7 days',
-      node: 'Node-02 (EU West)',
-      ip: '192.168.1.102',
-      port: '25566',
-      type: 'Discord Bot',
-      version: 'Python 3.11',
-      lastBackup: '1 day ago'
-    },
-    { 
-      id: 3, 
-      name: 'Telegram Bot', 
-      status: 'offline', 
-      cpu: '0%', 
-      ram: '0MB / 1GB',
-      disk: '0.8GB / 5GB',
-      uptime: 'Stopped',
-      node: 'Node-01 (US East)',
-      ip: '192.168.1.103',
-      port: '25567',
-      type: 'Telegram Bot',
-      version: 'Python 3.11',
-      lastBackup: '3 days ago'
-    },
-    { 
-      id: 4, 
-      name: 'Minecraft Bot', 
-      status: 'online', 
-      cpu: '5%', 
-      ram: '120MB / 512MB',
-      disk: '0.5GB / 5GB',
-      uptime: '12 hours',
-      node: 'Node-03 (Asia)',
-      ip: '192.168.1.104',
-      port: '25568',
-      type: 'Minecraft Bot',
-      version: 'Node.js 18',
-      lastBackup: '6 hours ago'
-    },
-  ]
+  const fetchServers = async () => {
+    try {
+      const res = await fetch('/api/servers')
+      if (res.ok) {
+        const data = await res.json()
+        setServers(data)
+      }
+    } catch {
+      setServers([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const filteredServers = servers.filter(server => {
-    const matchesSearch = server.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = filterStatus === 'all' || server.status === filterStatus
+  useEffect(() => {
+    fetchServers()
+    const interval = setInterval(fetchServers, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const serverAction = async (id, action) => {
+    setActionLoading(p => ({ ...p, [`${id}-${action}`]: true }))
+    try {
+      await fetch(`/api/servers/${id}/${action}`, { method: 'POST' })
+      setTimeout(fetchServers, 1000)
+    } catch (e) {}
+    setActionLoading(p => ({ ...p, [`${id}-${action}`]: false }))
+  }
+
+  const copyToClipboard = (text) => navigator.clipboard.writeText(text)
+
+  const filtered = servers.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesFilter = filterStatus === 'all' || s.status === filterStatus
     return matchesSearch && matchesFilter
   })
 
   const stats = {
     total: servers.length,
     online: servers.filter(s => s.status === 'online').length,
-    offline: servers.filter(s => s.status === 'offline').length,
-    totalRam: '3.5GB / 8GB',
-    totalCpu: '25%'
-  }
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
+    offline: servers.filter(s => s.status === 'stopped' || s.status === 'error').length,
+    starting: servers.filter(s => s.status === 'starting').length,
   }
 
   return (
     <Layout pageTitle="Servers">
       <div className="servers-page">
-        {/* Header Actions */}
+        {/* Header */}
         <div className="servers-header">
           <div className="header-actions">
             <Link to="/servers/create" className="create-server-btn">
-              <Plus size={18} />
-              Create New Server
+              <Plus size={16} />
+              New Server
             </Link>
           </div>
         </div>
 
-        {/* Stats Overview */}
+        {/* Stats */}
         <div className="servers-stats">
           <div className="stat-item">
             <Server size={20} />
             <div className="stat-info">
               <span className="stat-value">{stats.total}</span>
-              <span className="stat-label">Total Servers</span>
+              <span className="stat-label">Total</span>
             </div>
           </div>
           <div className="stat-item online">
@@ -515,180 +95,181 @@ export default function Servers() {
               <span className="stat-label">Offline</span>
             </div>
           </div>
-          <div className="stat-item">
-            <Cpu size={20} />
+          <div className="stat-item" style={{ color: '#f59e0b' }}>
+            <div className="status-dot" style={{ background: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }}></div>
             <div className="stat-info">
-              <span className="stat-value">{stats.totalCpu}</span>
-              <span className="stat-label">Total CPU</span>
+              <span className="stat-value">{stats.starting}</span>
+              <span className="stat-label">Starting</span>
             </div>
           </div>
           <div className="stat-item">
-            <MemoryStick size={20} />
+            <Cpu size={20} />
             <div className="stat-info">
-              <span className="stat-value">{stats.totalRam}</span>
-              <span className="stat-label">Total RAM</span>
+              <span className="stat-value">--</span>
+              <span className="stat-label">CPU Avg</span>
             </div>
           </div>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Toolbar */}
         <div className="servers-toolbar">
           <div className="search-wrapper">
-            <Search size={18} />
-            <input 
-              type="text" 
+            <Search size={16} />
+            <input
+              type="text"
               placeholder="Search servers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="filter-wrapper">
-            <Filter size={18} />
-            <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="all">All Servers</option>
+            <Filter size={16} />
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <option value="all">All Status</option>
               <option value="online">Online</option>
-              <option value="offline">Offline</option>
+              <option value="stopped">Stopped</option>
+              <option value="starting">Starting</option>
             </select>
           </div>
+          <button className="refresh-btn" onClick={fetchServers} title="Refresh">
+            <RefreshCw size={16} />
+          </button>
         </div>
 
-        {/* Servers Grid */}
-        <div className="servers-grid">
-          {filteredServers.map((server) => (
-            <div key={server.id} className="server-card">
-              {/* Card Header */}
-              <div className="server-card-header">
-                <div className="server-title">
-                  <div className={`server-status-badge ${server.status}`}>
-                    <span className="status-dot"></span>
-                    {server.status}
-                  </div>
-                  <h3>{server.name}</h3>
-                </div>
-                <button className="more-options-btn">
-                  <MoreVertical size={18} />
-                </button>
-              </div>
+        {/* Loading */}
+        {loading && (
+          <div className="servers-loading">
+            <Loader size={28} className="spin" />
+            <span>Connecting to Wingx daemon...</span>
+          </div>
+        )}
 
-              {/* Server Type & Version */}
-              <div className="server-type">
-                <span className="type-badge">{server.type}</span>
-                <span className="version-badge">{server.version}</span>
-              </div>
-
-              {/* Resource Usage */}
-              <div className="server-resources">
-                <div className="resource-item">
-                  <Cpu size={14} />
-                  <div className="resource-bar">
-                    <div 
-                      className="resource-fill cpu" 
-                      style={{ width: server.cpu }}
-                    ></div>
+        {/* Grid */}
+        {!loading && (
+          <div className="servers-grid">
+            {filtered.map((server) => (
+              <div key={server.id} className={`server-card ${server.status}`}>
+                {/* Card Header */}
+                <div className="server-card-header">
+                  <div className="server-title">
+                    <div className={`server-status-badge ${server.status}`}>
+                      <span className="status-dot"></span>
+                      {server.status}
+                    </div>
+                    <h3>{server.name}</h3>
                   </div>
-                  <span>{server.cpu}</span>
+                  <span className="server-id">#{server.id}</span>
                 </div>
-                <div className="resource-item">
-                  <MemoryStick size={14} />
-                  <div className="resource-bar">
-                    <div 
-                      className="resource-fill ram" 
-                      style={{ 
-                        width: server.ram.includes('/') ? 
-                          (parseInt(server.ram.split('/')[0].replace('MB', '')) / 
-                           parseInt(server.ram.split('/')[1].replace('MB', '').replace('GB', '')) * 100) + '%' 
-                          : '0%' 
-                      }}
-                    ></div>
-                  </div>
-                  <span>{server.ram}</span>
-                </div>
-                <div className="resource-item">
-                  <HardDrive size={14} />
-                  <div className="resource-bar">
-                    <div 
-                      className="resource-fill disk" 
-                      style={{ width: '23%' }}
-                    ></div>
-                  </div>
-                  <span>{server.disk}</span>
-                </div>
-              </div>
 
-              {/* Server Details */}
-              <div className="server-details-compact">
-                <div className="detail-row">
-                  <Globe size={14} />
-                  <span>{server.node}</span>
+                {/* Tags */}
+                <div className="server-type">
+                  <span className="type-badge">WhatsApp Bot</span>
+                  <span className="version-badge">Node.js 20</span>
                 </div>
-                <div className="detail-row">
-                  <Server size={14} />
-                  <span>{server.ip}:{server.port}</span>
-                  <button 
-                    className="copy-ip-btn" 
-                    title="Copy IP"
-                    onClick={() => copyToClipboard(`${server.ip}:${server.port}`)}
-                  >
-                    <Copy size={12} />
-                  </button>
-                </div>
-                <div className="detail-row">
-                  <RefreshCw size={14} />
-                  <span>Uptime: {server.uptime}</span>
-                </div>
-              </div>
 
-              {/* Card Actions - Simplified */}
-              <div className="server-card-actions-simple">
-                {server.status === 'online' ? (
-                  <>
-                    <button className="card-action-icon" title="Restart">
-                      <RefreshCw size={16} />
+                {/* Resource bars */}
+                <div className="server-resources">
+                  <div className="resource-item">
+                    <Cpu size={12} />
+                    <div className="resource-bar">
+                      <div className="resource-fill cpu" style={{ width: server.status === 'online' ? '12%' : '0%' }}></div>
+                    </div>
+                    <span>{server.status === 'online' ? '--' : '0%'}</span>
+                  </div>
+                  <div className="resource-item">
+                    <MemoryStick size={12} />
+                    <div className="resource-bar">
+                      <div className="resource-fill ram" style={{ width: server.status === 'online' ? '18%' : '0%' }}></div>
+                    </div>
+                    <span>-- MiB</span>
+                  </div>
+                  <div className="resource-item">
+                    <HardDrive size={12} />
+                    <div className="resource-bar">
+                      <div className="resource-fill disk" style={{ width: '5%' }}></div>
+                    </div>
+                    <span>-- MiB</span>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="server-details-compact">
+                  <div className="detail-row">
+                    <Globe size={12} />
+                    <span>{server.node}</span>
+                  </div>
+                  <div className="detail-row">
+                    <Server size={12} />
+                    <span>{server.node}:{server.port}</span>
+                    <button className="copy-ip-btn" title="Copy" onClick={() => copyToClipboard(`${server.node}:${server.port}`)}>
+                      <Copy size={10} />
                     </button>
-                    <button className="card-action-icon danger" title="Stop">
-                      <Square size={16} />
+                  </div>
+                  <div className="detail-row">
+                    <RefreshCw size={12} />
+                    <span>Uptime: {server.uptime || '--'}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="server-card-actions-simple">
+                  {server.status === 'online' || server.status === 'starting' ? (
+                    <>
+                      <button
+                        className="card-action-icon"
+                        title="Restart"
+                        onClick={() => serverAction(server.id, 'restart')}
+                        disabled={!!actionLoading[`${server.id}-restart`]}
+                      >
+                        <RefreshCw size={15} />
+                      </button>
+                      <button
+                        className="card-action-icon danger"
+                        title="Stop"
+                        onClick={() => serverAction(server.id, 'stop')}
+                        disabled={!!actionLoading[`${server.id}-stop`]}
+                      >
+                        <Square size={15} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="card-action-icon success"
+                      title="Start"
+                      onClick={() => serverAction(server.id, 'start')}
+                      disabled={!!actionLoading[`${server.id}-start`]}
+                    >
+                      <Play size={15} />
                     </button>
-                  </>
-                ) : (
-                  <button className="card-action-icon success" title="Start">
-                    <Play size={16} />
+                  )}
+                  <Link to={`/servers/${server.id}`} className="manage-server-btn">
+                    Manage <ExternalLink size={13} />
+                  </Link>
+                </div>
+
+                {/* Footer */}
+                <div className="server-card-footer">
+                  <button className="footer-action" title="Settings">
+                    <Settings size={12} />
                   </button>
-                )}
-                
-                {/* Dominant Manage Server Button */}
-                <Link to={`/servers/${server.id}`} className="manage-server-btn">
-                  Manage Server
-                  <ExternalLink size={14} />
-                </Link>
+                  <button className="footer-action danger" title="Delete">
+                    <Trash2 size={12} />
+                  </button>
+                  <span className="backup-info">Node.js 20 • Wingx</span>
+                </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Additional Actions */}
-              <div className="server-card-footer">
-                <button className="footer-action" title="Settings">
-                  <Settings size={14} />
-                </button>
-                <button className="footer-action danger" title="Delete">
-                  <Trash2 size={14} />
-                </button>
-                <span className="backup-info">
-                  Last backup: {server.lastBackup}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredServers.length === 0 && (
+        {/* Empty */}
+        {!loading && filtered.length === 0 && (
           <div className="empty-state">
-            <Server size={48} />
+            <Server size={42} />
             <h3>No servers found</h3>
-            <p>Create your first server to get started!</p>
+            <p>{servers.length === 0 ? 'Create your first server to get started.' : 'No servers match your search.'}</p>
             <Link to="/servers/create" className="create-server-btn">
-              <Plus size={18} />
+              <Plus size={16} />
               Create Server
             </Link>
           </div>

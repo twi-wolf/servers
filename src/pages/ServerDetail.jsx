@@ -1,469 +1,365 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import Layout from '../components/Layout'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { io } from 'socket.io-client'
 import '../styles/ServerDetail.css'
-import { 
-  Play,
-  Square,
-  RefreshCw,
-  Terminal,
-  FolderOpen,
-  Settings,
-  Cpu,
-  MemoryStick,
-  HardDrive,
-  Globe,
-  Activity,
-  Clock,
-  Copy,
-  ChevronLeft,
-  Zap,
-  Database,
-  Shield,
-  Wifi,
-  AlertCircle,
-  Power,
-  Save,
-  Upload,
-  Download,
-  File,
-  Folder,
-  MoreVertical,
-  Edit3,
-  Trash2
+import {
+  Terminal, FolderOpen, Database, Calendar, Users, Archive,
+  Network, Zap, Settings, Activity, ExternalLink, Play, RefreshCw,
+  Square, Wifi, Clock, Cpu, MemoryStick, HardDrive, Menu, X,
+  ArrowLeft, Upload, Download, File, Folder, Save, Trash2, Copy, Check
 } from 'lucide-react'
+
+const MOCK_SERVERS = {
+  '1': { id: '1', name: 'WA Sales Bot', node: 'Node-01', port: '3010', cpuLimit: '∞', memLimit: '∞' },
+  '2': { id: '2', name: 'WA Support Bot', node: 'Node-02', port: '3011', cpuLimit: '∞', memLimit: '∞' },
+  '3': { id: '3', name: 'WA Broadcast Bot', node: 'Node-01', port: '3012', cpuLimit: '∞', memLimit: '∞' },
+}
+
+const NAV_ITEMS = [
+  { id: 'console', label: 'Console', icon: Terminal },
+  { id: 'files', label: 'Files', icon: FolderOpen },
+  { id: 'databases', label: 'Databases', icon: Database },
+  { id: 'schedules', label: 'Schedules', icon: Calendar },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'backups', label: 'Backups', icon: Archive },
+  { id: 'network', label: 'Network', icon: Network },
+  { id: 'startup', label: 'Startup', icon: Zap },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'activity', label: 'Activity', icon: Activity },
+]
+
+function getLogClass(entry) {
+  const msg = (entry.message || '').toLowerCase()
+  if (entry.type === 'command') return 'log-cmd'
+  if (entry.type === 'system') return 'log-sys'
+  if (entry.type === 'error') return 'log-err'
+  if (msg.includes('error') || msg.includes('err:') || msg.includes('fatal')) return 'log-err'
+  if (msg.includes('warn')) return 'log-warn'
+  if (msg.includes('pair') || msg.includes('qr') || msg.includes('scan') || msg.includes('pairing')) return 'log-pair'
+  if (msg.includes('success') || msg.includes('connected') || msg.includes('online')) return 'log-ok'
+  return 'log-default'
+}
+
+function formatUptime(startedAt) {
+  if (!startedAt) return '--'
+  const s = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600)
+  const m = Math.floor((s % 3600) / 60), sec = s % 60
+  if (d > 0) return `${d}d ${h}h ${m}m`
+  if (h > 0) return `${h}h ${m}m ${sec}s`
+  if (m > 0) return `${m}m ${sec}s`
+  return `${sec}s`
+}
 
 export default function ServerDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('console')
+  const [navOpen, setNavOpen] = useState(false)
+  const [status, setStatus] = useState('stopped')
+  const [logs, setLogs] = useState([])
   const [command, setCommand] = useState('')
-  const [consoleOutput, setConsoleOutput] = useState([
-    { type: 'info', message: '[SERVER-WOLF] Starting server...', time: '10:30:15' },
-    { type: 'success', message: '[INFO] Node.js v20.10.0 detected', time: '10:30:16' },
-    { type: 'info', message: '[INFO] Installing dependencies...', time: '10:30:17' },
-    { type: 'success', message: '[SUCCESS] Dependencies installed', time: '10:30:25' },
-    { type: 'info', message: '[INFO] Starting bot application...', time: '10:30:26' },
-    { type: 'success', message: '[SUCCESS] Bot is online and running!', time: '10:30:28' },
-  ])
+  const [startedAt, setStartedAt] = useState(null)
+  const [uptimeStr, setUptimeStr] = useState('--')
+  const [copied, setCopied] = useState(false)
+  const consoleRef = useRef(null)
+  const socketRef = useRef(null)
+  const server = MOCK_SERVERS[id] || MOCK_SERVERS['1']
 
-  // Mock server data
-  const server = {
-    id: id,
-    name: 'Discord Music Bot',
-    status: 'online',
-    cpu: '12%',
-    ram: '256MB / 1GB',
-    disk: '2.3GB / 10GB',
-    uptime: '3 days 4 hours',
-    node: 'Node-01 (US East)',
-    ip: '192.168.1.101',
-    port: '25565',
-    type: 'Discord Bot',
-    version: 'Node.js 20',
-    lastBackup: '2 hours ago',
-    sftp: {
-      host: 'sftp.server-wolf.com',
-      port: '2022',
-      username: 'user_server1'
+  useEffect(() => {
+    const socket = io('/', { path: '/socket.io', transports: ['websocket', 'polling'] })
+    socketRef.current = socket
+    socket.on('connect', () => socket.emit('join:server', id))
+    socket.on('log:history', (h) => setLogs(h))
+    socket.on('log', (e) => setLogs(p => [...p.slice(-999), e]))
+    socket.on('server:status', (s) => {
+      setStatus(s)
+      if (s === 'online') setStartedAt(new Date().toISOString())
+      if (s === 'stopped') setStartedAt(null)
+    })
+    return () => { socket.emit('leave:server', id); socket.disconnect() }
+  }, [id])
+
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight
     }
-  }
+  }, [logs])
 
-  const tabs = [
-    { id: 'console', label: 'Console', icon: Terminal },
-    { id: 'files', label: 'File Manager', icon: FolderOpen },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'backups', label: 'Backups', icon: Database },
-    { id: 'network', label: 'Network', icon: Globe },
-  ]
+  useEffect(() => {
+    const t = setInterval(() => { if (startedAt) setUptimeStr(formatUptime(startedAt)) }, 1000)
+    return () => clearInterval(t)
+  }, [startedAt])
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-  }
-
-  const sendCommand = (e) => {
+  const call = (action) => fetch(`/api/servers/${id}/${action}`, { method: 'POST' }).catch(() => {})
+  const handleCommand = (e) => {
     e.preventDefault()
-    if (command.trim()) {
-      setConsoleOutput([...consoleOutput, { 
-        type: 'command', 
-        message: `> ${command}`, 
-        time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      }])
+    if (command.trim() && socketRef.current) {
+      socketRef.current.emit('command', { serverId: id, cmd: command })
       setCommand('')
     }
   }
+  const copyAddr = () => {
+    navigator.clipboard.writeText(`${server.node}:${server.port}`)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <Layout pageTitle={`Server: ${server.name}`}>
-      <div className="server-detail">
-        {/* Back Navigation */}
-        <div className="back-nav">
-          <Link to="/servers" className="back-link">
-            <ChevronLeft size={18} />
-            Back to Servers
-          </Link>
-        </div>
-
-        {/* Server Header */}
-        <div className="server-header">
-          <div className="server-title-section">
-            <div className={`server-status-large ${server.status}`}>
-              <span className="status-dot"></span>
-              <span>{server.status}</span>
-            </div>
-            <h1>{server.name}</h1>
-            <div className="server-tags">
-              <span className="tag">{server.type}</span>
-              <span className="tag">{server.version}</span>
-            </div>
-          </div>
-          <div className="server-actions-large">
-            {server.status === 'online' ? (
-              <>
-                <button className="action-btn" title="Restart">
-                  <RefreshCw size={18} />
-                  <span>Restart</span>
-                </button>
-                <button className="action-btn danger" title="Stop">
-                  <Square size={18} />
-                  <span>Stop</span>
-                </button>
-              </>
-            ) : (
-              <button className="action-btn success" title="Start">
-                <Play size={18} />
-                <span>Start</span>
-              </button>
-            )}
-            <button className="action-btn" title="Force Stop">
-              <Power size={18} />
-              <span>Kill</span>
-            </button>
+    <div className="sd-root">
+      {/* Top Bar */}
+      <header className="sd-topbar">
+        <div className="sd-topbar-left">
+          <button className="sd-back" onClick={() => navigate('/servers')}>
+            <ArrowLeft size={18} />
+          </button>
+          <div className="sd-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00ff00" strokeWidth="2" width="22" height="22">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>SERVER-WOLF</span>
           </div>
         </div>
 
-        {/* Resource Stats */}
-        <div className="resource-stats">
-          <div className="resource-stat-card">
-            <Cpu size={18} />
-            <div className="resource-info">
-              <span className="resource-value">{server.cpu}</span>
-              <span className="resource-label">CPU Usage</span>
-            </div>
-            <div className="resource-bar-wrapper">
-              <div className="resource-bar" style={{ width: server.cpu }}></div>
-            </div>
-          </div>
-          <div className="resource-stat-card">
-            <MemoryStick size={18} />
-            <div className="resource-info">
-              <span className="resource-value">{server.ram}</span>
-              <span className="resource-label">Memory</span>
-            </div>
-            <div className="resource-bar-wrapper">
-              <div className="resource-bar" style={{ width: '25%' }}></div>
-            </div>
-          </div>
-          <div className="resource-stat-card">
-            <HardDrive size={18} />
-            <div className="resource-info">
-              <span className="resource-value">{server.disk}</span>
-              <span className="resource-label">Storage</span>
-            </div>
-            <div className="resource-bar-wrapper">
-              <div className="resource-bar" style={{ width: '23%' }}></div>
-            </div>
-          </div>
-          <div className="resource-stat-card">
-            <Clock size={18} />
-            <div className="resource-info">
-              <span className="resource-value">{server.uptime}</span>
-              <span className="resource-label">Uptime</span>
-            </div>
-          </div>
+        <div className="sd-topbar-center">
+          <span className="sd-top-server-name">{server.name}</span>
+          <span className={`sd-top-status ${status}`}>
+            <span className="sd-top-dot" />
+            {status}
+          </span>
         </div>
 
-        {/* Server Info Bar */}
-        <div className="server-info-bar">
-          <div className="info-item">
-            <Globe size={14} />
-            <span>{server.node}</span>
-          </div>
-          <div className="info-item">
-            <Wifi size={14} />
-            <span>{server.ip}:{server.port}</span>
-            <button onClick={() => copyToClipboard(`${server.ip}:${server.port}`)} className="copy-btn">
-              <Copy size={12} />
-            </button>
-          </div>
-          <div className="info-item">
-            <Database size={14} />
-            <span>Last Backup: {server.lastBackup}</span>
-          </div>
+        <div className="sd-topbar-right">
+          <button className="sd-hamburger" onClick={() => setNavOpen(o => !o)}>
+            {navOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
+      </header>
 
-        {/* Tabs Navigation */}
-        <div className="server-tabs">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
+      {/* Body */}
+      <div className="sd-body">
+        {/* Left Nav */}
+        {navOpen && <div className="sd-nav-overlay" onClick={() => setNavOpen(false)} />}
+        <nav className={`sd-nav ${navOpen ? 'open' : ''}`}>
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon
             return (
               <button
-                key={tab.id}
-                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                key={item.id}
+                className={`sd-nav-btn ${activeTab === item.id ? 'active' : ''}`}
+                onClick={() => { setActiveTab(item.id); setNavOpen(false) }}
               >
-                <Icon size={16} />
-                <span>{tab.label}</span>
+                <Icon size={18} />
+                <span>{item.label}</span>
               </button>
             )
           })}
-        </div>
+          <div className="sd-nav-gap" />
+          <a
+            href="https://github.com/WOLFTECH-254/silentwolf"
+            target="_blank" rel="noopener noreferrer"
+            className="sd-nav-btn external"
+            title="Bot Source"
+          >
+            <ExternalLink size={18} />
+          </a>
+        </nav>
 
-        {/* Tab Content */}
-        <div className="tab-content">
-          {/* Console Tab */}
+        {/* Main */}
+        <main className="sd-main">
+          {/* Content header with control buttons */}
+          <div className="sd-ctrl-bar">
+            <div className="sd-ctrl-title">
+              <h2>{server.name}</h2>
+            </div>
+            <div className="sd-ctrl-btns">
+              <button
+                className="sd-ctrl-btn start"
+                onClick={() => call('start')}
+                disabled={status === 'online' || status === 'starting'}
+              >
+                <Play size={14} /> Start
+              </button>
+              <button className="sd-ctrl-btn restart" onClick={() => call('restart')}>
+                <RefreshCw size={14} /> Restart
+              </button>
+              <button
+                className="sd-ctrl-btn stop"
+                onClick={() => call('stop')}
+                disabled={status === 'stopped'}
+              >
+                <Square size={14} /> Stop
+              </button>
+            </div>
+          </div>
+
+          {/* Console */}
           {activeTab === 'console' && (
-            <div className="console-tab">
-              <div className="console-output">
-                {consoleOutput.map((line, index) => (
-                  <div key={index} className={`console-line ${line.type}`}>
-                    <span className="console-time">[{line.time}]</span>
-                    <span className="console-message">{line.message}</span>
+            <div className="sd-console-wrap">
+              <div className="sd-console" ref={consoleRef}>
+                {logs.length === 0 && (
+                  <div className="sd-log-line log-sys">
+                    <span className="sd-log-msg">Waiting for output... Press Start to launch the bot.</span>
+                  </div>
+                )}
+                {logs.map((entry, i) => (
+                  <div key={i} className={`sd-log-line ${getLogClass(entry)}`}>
+                    <span className="sd-log-time">
+                      {entry.time ? new Date(entry.time).toLocaleTimeString('en-US', { hour12: false }) : ''}
+                    </span>
+                    <span className="sd-log-msg">{entry.message}</span>
                   </div>
                 ))}
               </div>
-              <form onSubmit={sendCommand} className="console-input-form">
-                <span className="console-prompt">$</span>
+              <form className="sd-console-input" onSubmit={handleCommand}>
+                <span className="sd-prompt">$</span>
                 <input
                   type="text"
                   value={command}
-                  onChange={(e) => setCommand(e.target.value)}
-                  placeholder="Type a command..."
-                  className="console-input"
+                  onChange={e => setCommand(e.target.value)}
+                  placeholder="Enter command..."
+                  autoComplete="off"
                 />
-                <button type="submit" className="send-btn">
-                  Send
-                </button>
+                <button type="submit">Send</button>
               </form>
             </div>
           )}
 
-          {/* File Manager Tab */}
+          {/* Files */}
           {activeTab === 'files' && (
-            <div className="files-tab">
-              <div className="files-toolbar">
-                <div className="files-actions">
-                  <button className="file-action-btn">
-                    <Upload size={16} />
-                    Upload
-                  </button>
-                  <button className="file-action-btn">
-                    <Folder size={16} />
-                    New Folder
-                  </button>
-                  <button className="file-action-btn">
-                    <Download size={16} />
-                    Download
-                  </button>
-                  <button className="file-action-btn danger">
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
-                </div>
-                <div className="file-path">
-                  <Folder size={14} />
-                  <span>/home/container/</span>
+            <div className="sd-files">
+              <div className="sd-files-toolbar">
+                <span className="sd-file-path"><Folder size={14} /> /home/container/</span>
+                <div className="sd-file-actions">
+                  <button className="sd-file-btn"><Upload size={14} /> Upload</button>
+                  <button className="sd-file-btn"><Folder size={14} /> New Folder</button>
+                  <button className="sd-file-btn danger"><Trash2 size={14} /> Delete</button>
                 </div>
               </div>
-              <div className="files-list">
-                <div className="file-item">
-                  <Folder size={16} />
-                  <span>node_modules</span>
-                  <span className="file-size">-</span>
-                </div>
-                <div className="file-item">
-                  <File size={16} />
-                  <span>index.js</span>
-                  <span className="file-size">2.4 KB</span>
-                </div>
-                <div className="file-item">
-                  <File size={16} />
-                  <span>package.json</span>
-                  <span className="file-size">856 B</span>
-                </div>
-                <div className="file-item">
-                  <File size={16} />
-                  <span>config.json</span>
-                  <span className="file-size">432 B</span>
-                </div>
-                <div className="file-item">
-                  <Folder size={16} />
-                  <span>src</span>
-                  <span className="file-size">-</span>
-                </div>
+              <div className="sd-file-list">
+                {[
+                  { name: 'node_modules', type: 'dir', size: '-' },
+                  { name: 'index.js', type: 'file', size: '12.4 KB' },
+                  { name: 'package.json', type: 'file', size: '2.1 KB' },
+                  { name: 'wolf.js', type: 'file', size: '45.8 KB' },
+                  { name: 'lib', type: 'dir', size: '-' },
+                  { name: '.env', type: 'file', size: '0.5 KB' },
+                ].map((f, i) => (
+                  <div key={i} className="sd-file-row">
+                    {f.type === 'dir' ? <Folder size={16} className="file-dir" /> : <File size={16} className="file-file" />}
+                    <span className="sd-file-name">{f.name}</span>
+                    <span className="sd-file-size">{f.size}</span>
+                    <div className="sd-file-row-actions">
+                      <button title="Download"><Download size={13} /></button>
+                      <button className="danger" title="Delete"><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Settings Tab */}
+          {/* Settings */}
           {activeTab === 'settings' && (
-            <div className="settings-tab">
-              <div className="settings-section">
-                <h3>General Settings</h3>
-                <div className="setting-item">
+            <div className="sd-settings">
+              <div className="sd-settings-section">
+                <h3>General</h3>
+                <div className="sd-setting-row">
                   <label>Server Name</label>
-                  <input type="text" value={server.name} className="setting-input" />
+                  <input type="text" defaultValue={server.name} className="sd-setting-input" />
                 </div>
-                <div className="setting-item">
+                <div className="sd-setting-row">
                   <label>Startup Command</label>
-                  <input type="text" value="node index.js" className="setting-input" />
+                  <input type="text" defaultValue="node --no-warnings index.js" className="sd-setting-input" />
                 </div>
-                <div className="setting-item">
-                  <label>Docker Image</label>
-                  <select className="setting-select">
+                <div className="sd-setting-row">
+                  <label>Runtime</label>
+                  <select className="sd-setting-select">
                     <option>Node.js 20</option>
                     <option>Node.js 18</option>
                     <option>Python 3.11</option>
-                    <option>Java 17</option>
                   </select>
                 </div>
               </div>
-              <div className="settings-section">
+              <div className="sd-settings-section">
                 <h3>Resource Limits</h3>
-                <div className="setting-item">
+                <div className="sd-setting-row">
                   <label>CPU Limit (%)</label>
-                  <input type="number" value="100" className="setting-input" />
+                  <input type="number" defaultValue="100" className="sd-setting-input" />
                 </div>
-                <div className="setting-item">
-                  <label>Memory Limit (MB)</label>
-                  <input type="number" value="1024" className="setting-input" />
+                <div className="sd-setting-row">
+                  <label>Memory (MB)</label>
+                  <input type="number" defaultValue="512" className="sd-setting-input" />
                 </div>
-                <div className="setting-item">
-                  <label>Disk Limit (MB)</label>
-                  <input type="number" value="10240" className="setting-input" />
-                </div>
-              </div>
-              <div className="settings-section">
-                <h3>SFTP Details</h3>
-                <div className="setting-item">
-                  <label>Host</label>
-                  <div className="copy-input">
-                    <input type="text" value={server.sftp.host} readOnly />
-                    <button onClick={() => copyToClipboard(server.sftp.host)}>
-                      <Copy size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="setting-item">
-                  <label>Port</label>
-                  <div className="copy-input">
-                    <input type="text" value={server.sftp.port} readOnly />
-                    <button onClick={() => copyToClipboard(server.sftp.port)}>
-                      <Copy size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="setting-item">
-                  <label>Username</label>
-                  <div className="copy-input">
-                    <input type="text" value={server.sftp.username} readOnly />
-                    <button onClick={() => copyToClipboard(server.sftp.username)}>
-                      <Copy size={14} />
-                    </button>
-                  </div>
+                <div className="sd-setting-row">
+                  <label>Disk (MB)</label>
+                  <input type="number" defaultValue="5120" className="sd-setting-input" />
                 </div>
               </div>
-              <div className="settings-actions">
-                <button className="save-settings-btn">
-                  <Save size={16} />
-                  Save Changes
-                </button>
-              </div>
+              <button className="sd-save-btn"><Save size={16} /> Save Changes</button>
             </div>
           )}
 
-          {/* Backups Tab */}
-          {activeTab === 'backups' && (
-            <div className="backups-tab">
-              <div className="backups-header">
-                <button className="create-backup-btn">
-                  <Save size={16} />
-                  Create Backup
+          {/* Placeholder tabs */}
+          {!['console', 'files', 'settings'].includes(activeTab) && (
+            <div className="sd-placeholder">
+              {(() => { const item = NAV_ITEMS.find(n => n.id === activeTab); const Icon = item?.icon || Settings; return <Icon size={42} /> })()}
+              <h3>{NAV_ITEMS.find(n => n.id === activeTab)?.label}</h3>
+              <p>This section is coming soon</p>
+            </div>
+          )}
+        </main>
+
+        {/* Right Stats Panel */}
+        <aside className="sd-stats">
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><Wifi size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">Address</div>
+              <div className="sd-stat-val">
+                {server.node}:{server.port}
+                <button className="sd-copy-btn" onClick={copyAddr} title="Copy">
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
                 </button>
               </div>
-              <div className="backups-list">
-                <div className="backup-item">
-                  <div className="backup-info">
-                    <Database size={18} />
-                    <div>
-                      <h4>backup-2026-04-22-10-30.zip</h4>
-                      <p>Created: 2 hours ago • Size: 45.2 MB</p>
-                    </div>
-                  </div>
-                  <div className="backup-actions">
-                    <button className="backup-action" title="Restore">
-                      <RefreshCw size={14} />
-                    </button>
-                    <button className="backup-action" title="Download">
-                      <Download size={14} />
-                    </button>
-                    <button className="backup-action danger" title="Delete">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="backup-item">
-                  <div className="backup-info">
-                    <Database size={18} />
-                    <div>
-                      <h4>backup-2026-04-21-15-20.zip</h4>
-                      <p>Created: 1 day ago • Size: 44.8 MB</p>
-                    </div>
-                  </div>
-                  <div className="backup-actions">
-                    <button className="backup-action" title="Restore">
-                      <RefreshCw size={14} />
-                    </button>
-                    <button className="backup-action" title="Download">
-                      <Download size={14} />
-                    </button>
-                    <button className="backup-action danger" title="Delete">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
-          )}
-
-          {/* Network Tab */}
-          {activeTab === 'network' && (
-            <div className="network-tab">
-              <div className="network-section">
-                <h3>Port Allocations</h3>
-                <div className="port-list">
-                  <div className="port-item">
-                    <span>Primary Port</span>
-                    <code>{server.port}</code>
-                  </div>
-                </div>
-              </div>
-              <div className="network-section">
-                <h3>Connection Info</h3>
-                <div className="info-grid">
-                  <div className="info-row">
-                    <span>IP Address</span>
-                    <code>{server.ip}</code>
-                  </div>
-                  <div className="info-row">
-                    <span>Node</span>
-                    <code>{server.node}</code>
-                  </div>
-                </div>
-              </div>
+          </div>
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><Clock size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">Uptime</div>
+              <div className="sd-stat-val">{status === 'online' ? uptimeStr : '--'}</div>
             </div>
-          )}
-        </div>
+          </div>
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><Cpu size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">CPU Load</div>
+              <div className="sd-stat-val">-- / {server.cpuLimit}</div>
+            </div>
+          </div>
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><MemoryStick size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">Memory</div>
+              <div className="sd-stat-val">-- MiB / {server.memLimit}</div>
+            </div>
+          </div>
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><HardDrive size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">Disk</div>
+              <div className="sd-stat-val">-- MiB / ∞</div>
+            </div>
+          </div>
+          <div className="sd-stat-card">
+            <div className="sd-stat-icon"><Activity size={20} /></div>
+            <div className="sd-stat-body">
+              <div className="sd-stat-lbl">Network (In)</div>
+              <div className="sd-stat-val">-- GiB</div>
+            </div>
+          </div>
+        </aside>
       </div>
-    </Layout>
+    </div>
   )
 }

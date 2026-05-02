@@ -43,6 +43,15 @@
   min-height: 100vh;
 }
 
+/* Mobile overlay backdrop */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 190;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .main-wrapper,
@@ -53,4 +62,6 @@
   .main-content {
     padding: 80px 1rem 1rem;
   }
+
+  .mobile-overlay { display: block; }
 }

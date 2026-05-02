@@ -543,6 +543,51 @@
   }
 }
 
+/* Server card status border accent */
+.server-card.online  { border-color: rgba(0,255,0,0.2); }
+.server-card.stopped { border-color: rgba(100,100,100,0.2); }
+.server-card.error   { border-color: rgba(239,68,68,0.25); }
+.server-card.starting { border-color: rgba(245,158,11,0.2); }
+
+/* Server ID badge */
+.server-id {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.6rem;
+  color: #4b5563;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+/* Refresh button */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(0,255,0,0.15);
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.refresh-btn:hover { color: #00ff00; border-color: rgba(0,255,0,0.4); }
+
+/* Loading state */
+.servers-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+@keyframes spin { from{transform:rotate(0deg)}to{transform:rotate(360deg)} }
+.spin { animation: spin 1s linear infinite; color: #00ff00; }
+
 /* Responsive Breakpoints */
 @media (max-width: 1400px) {
   .servers-grid {
@@ -554,37 +599,51 @@
   .servers-stats {
     grid-template-columns: repeat(3, 1fr);
   }
+  .servers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 900px) {
   .servers-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
   .servers-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
   }
-  
   .servers-toolbar {
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .search-wrapper { flex: 1; min-width: 160px; }
+  .servers-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 580px) {
   .servers-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .servers-grid {
     grid-template-columns: 1fr;
   }
-  
-  .server-card-header {
-    flex-direction: column;
-    gap: 0.3rem;
+  .server-card-actions-simple {
+    flex-wrap: wrap;
   }
-  
-  .more-options-btn {
-    align-self: flex-end;
+  .manage-server-btn { flex: 1; }
+}
+
+@media (max-width: 400px) {
+  .servers-stats {
+    grid-template-columns: 1fr 1fr;
   }
+  .servers-header { flex-wrap: wrap; gap: 0.5rem; }
+  .create-server-btn { font-size: 0.7rem; padding: 0.5rem 0.9rem; }
 }
 
 

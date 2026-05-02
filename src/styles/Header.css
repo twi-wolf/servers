@@ -247,22 +247,20 @@
   }
 }
 
+/* desktop-only / mobile-only utilities */
+.desktop-only { display: flex; }
+.mobile-only  { display: none; }
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .header {
     left: 0 !important;
     padding: 0 1rem;
   }
-  
-  .search-bar {
-    display: none;
-  }
-  
-  .page-title {
-    font-size: 1.2rem;
-  }
-  
-  .user-name-header {
-    display: none;
-  }
+  .search-bar { display: none; }
+  .page-title { font-size: 1.1rem; }
+  .user-name-header { display: none; }
+
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: flex !important; }
 }
