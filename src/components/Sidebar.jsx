@@ -3,7 +3,8 @@ import '../styles/Sidebar.css'
 import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard, Server, Users, Code2, Settings,
-  ChevronLeft, ChevronRight, LogOut, Shield, X
+  ChevronLeft, ChevronRight, LogOut, Shield, X,
+  LayoutGrid, Database, MapPin, HardDrive, Package
 } from 'lucide-react'
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
@@ -19,16 +20,33 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
 
+  const adminItems = [
+    { path: '/admin', label: 'Admin Overview', icon: LayoutGrid },
+    { path: '/admin/nodes', label: 'Nodes', icon: Server },
+    { path: '/admin/locations', label: 'Locations', icon: MapPin },
+    { path: '/admin/databases', label: 'Databases', icon: Database },
+    { path: '/admin/mounts', label: 'Mounts', icon: HardDrive },
+    { path: '/admin/nests', label: 'Nests', icon: Package },
+  ]
+
+  const isAdmin = user?.role === 'admin'
+
   const handleLogout = () => { logout(); navigate('/login') }
   const handleNavClick = () => setMobileOpen(false)
 
+  const isActive = (path) =>
+    path === '/admin'
+      ? location.pathname === '/admin'
+      : location.pathname === path || location.pathname.startsWith(path + '/')
+
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
-      {/* Mobile close button */}
+      {/* Mobile close */}
       <button className="sidebar-mobile-close" onClick={() => setMobileOpen(false)}>
         <X size={18} />
       </button>
 
+      {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#00ff00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,14 +62,15 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
       </div>
 
       <nav className="sidebar-nav">
+        {/* Main nav */}
+        {!collapsed && <span className="sidebar-section-label">Main</span>}
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`sidebar-link ${isActive ? 'active' : ''}`}
+              className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
               title={collapsed ? item.label : ''}
               onClick={handleNavClick}
             >
@@ -60,24 +79,51 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             </Link>
           )
         })}
+
+        {/* Admin section */}
+        {isAdmin && (
+          <>
+            {!collapsed && <span className="sidebar-section-label admin-label">Administration</span>}
+            {collapsed && <div className="sidebar-divider" />}
+            {adminItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`sidebar-link admin-link ${isActive(item.path) ? 'active' : ''}`}
+                  title={collapsed ? item.label : ''}
+                  onClick={handleNavClick}
+                >
+                  <Icon size={20} />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
-      {/* Collapse toggle (desktop only) */}
+      {/* Collapse toggle (desktop) */}
       <button className="sidebar-toggle desktop-only" onClick={() => setCollapsed(!collapsed)}>
         {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         {!collapsed && <span>Collapse</span>}
       </button>
 
+      {/* User profile */}
       <div className="sidebar-user">
-        <div className="user-avatar">
-          {user?.role === 'admin'
-            ? <Shield size={16} style={{ color: '#3b82f6' }} />
+        <div className={`user-avatar ${isAdmin ? 'admin' : ''}`}>
+          {isAdmin
+            ? <Shield size={16} />
             : <span>{user?.username?.[0]?.toUpperCase() || 'U'}</span>
           }
         </div>
         {!collapsed && (
           <div className="user-info">
-            <p className="user-name">{user?.username || 'User'}</p>
+            <p className="user-name">
+              {user?.username || 'User'}
+              {isAdmin && <span className="user-role-badge">Admin</span>}
+            </p>
             <p className="user-email">{user?.email || ''}</p>
           </div>
         )}
