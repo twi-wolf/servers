@@ -315,7 +315,7 @@ export default function Settings() {
                     </label>
                   </div>
                   {security.twoFactorEnabled && (
-                    <div className="2fa-setup">
+                    <div className="twofa-setup">
                       <p>Scan this QR code with your authenticator app:</p>
                       <div className="qr-placeholder">QR Code</div>
                       <button className="setup-2fa-btn">Setup 2FA</button>
